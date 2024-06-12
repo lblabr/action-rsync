@@ -6,7 +6,7 @@
 
 ## Quick start
 
-> Github action (.github/workflows/*.yml)
+> Github Action (`.github/workflows/*.yml`)
 
 ```yml
 on: [push]
@@ -15,8 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # Must checkout first, otherwise it would show empty folder, see https://github.com/actions/checkout
-      - uses: actions/checkout@v2
-      # Modify `master` to valid version, see https://github.com/marketplace/actions/action-rsync
+      - uses: actions/checkout@v4
+      # Modify `master` to a valid version, see https://github.com/marketplace/actions/action-rsync
       - uses: up9cloud/action-rsync@master
         env:
           HOST: target.example.com
@@ -24,7 +24,7 @@ jobs:
           TARGET: /app/
 ```
 
-> Drone CI (.drone.yml)
+> Drone CI (`.drone.yml`)
 
 ```yml
 kind: pipeline
@@ -46,7 +46,7 @@ steps:
       target: /app/
 ```
 
-> Docker
+> Docker Container
 
 ```bash
 docker run -it --rm \
@@ -125,7 +125,7 @@ jobs:
   rsync:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Deploy to my ❤️
       uses: up9cloud/action-rsync@master
       env:
@@ -151,6 +151,7 @@ See also: [.github/workflows/main.yml](https://github.com/up9cloud/action-rsync/
 
 ## TODO
 
+- [ ] test ssh connection before executing
 - [ ] benchmark, compare with other actions based on js
 - [ ] lock the version of docker image
 - [ ] let variable names more meaningful, e.q. HOST to REMOTE_HOST

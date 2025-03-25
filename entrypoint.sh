@@ -1,15 +1,21 @@
 #!/bin/sh
 set -e
 
+__err=0
 function log() {
-	if [ "$VERBOSE" = "true" ]; then
-		echo [action-rsync] "$@"
+	if [ "$VERBOSE" == "true" ]; then
+		printf '[action-rsync] %s\n' "$@"
 	fi
 }
+function err() {
+	__err=$((__err + 1))
+	printf '[action-rsync] %s\n' "$@" 1>&2
+}
 function die() {
-	echo [action-rsync] "$@" 1>&2
+	err "$@"
 	exit 1
 }
+
 function setup_keys() {
 	local prefix="$1"
 	K_VERBOSE="\$${prefix}VERBOSE"
@@ -295,9 +301,8 @@ run_script() {
 	log "========== $name removed =========="
 }
 
-# Execute
-for h in $REMOTE_HOSTS; do
-	HOST="$h"
+__run_count=0
+run_once() {
 	if [ -n "$PRE_SCRIPT" ]; then
 		pre_src=$(mktemp)
 		echo -e "$PRE_SCRIPT" >"$pre_src"
@@ -319,4 +324,23 @@ for h in $REMOTE_HOSTS; do
 		echo -e "$POST_SCRIPT" >"$post_src"
 		run_script "Post script" "$post_src"
 	fi
-done
+	__run_count=$((__run_count + 1))
+}
+
+# Execute
+if [ "$MODE" == "local" ]; then
+	run_once
+else
+	for h in $REMOTE_HOSTS; do
+		HOST="$h"
+		run_once
+	done
+fi
+
+# final handler
+if [[ "$__run_count" -eq 0 ]]; then
+	err "No successful execution was detected"
+fi
+if [[ "$__err" -ne 0 ]]; then
+	exit 1
+fi

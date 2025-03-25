@@ -15,6 +15,7 @@ function setup_keys() {
 	K_VERBOSE="\$${prefix}VERBOSE"
 	K_MODE="\$${prefix}MODE"
 	K_HOST="\$${prefix}HOST"
+	K_REMOTE_HOSTS="\$${prefix}REMOTE_HOSTS"
 	K_TARGET="\$${prefix}TARGET"
 	K_KEY="\$${prefix}KEY"
 	K_PASSWORD="\$${prefix}PASSWORD"
@@ -40,6 +41,9 @@ if [ -n "$PLUGIN_MODE" ]; then
 fi
 if [ -n "$PLUGIN_HOST" ]; then
 	HOST="$PLUGIN_HOST"
+fi
+if [ -n "$PLUGIN_REMOTE_HOSTS" ]; then
+	REMOTE_HOSTS="$PLUGIN_REMOTE_HOSTS"
 fi
 if [ -n "$PLUGIN_TARGET" ]; then
 	TARGET="$PLUGIN_TARGET"
@@ -102,12 +106,18 @@ else
 	esac
 fi
 
-if [ -z "$HOST" ]; then
-	case "$MODE" in
-	push | pull)
-		die "Must specify $K_HOST! (Remote host)"
-		;;
-	esac
+if [ -z "$REMOTE_HOSTS" ]; then
+	if [ -z "$HOST" ]; then
+		case "$MODE" in
+		push | pull)
+			die "Must specify $K_HOST or $K_REMOTE_HOSTS! (Remote host)"
+			;;
+		esac
+	fi
+	REMOTE_HOSTS="$HOST"
+else
+	REMOTE_HOSTS="${REMOTE_HOSTS//[,]/ }"
+	REMOTE_HOSTS="${REMOTE_HOSTS//$'\n'/ }"
 fi
 
 if [ -z "$TARGET" ]; then
@@ -286,24 +296,27 @@ run_script() {
 }
 
 # Execute
-if [ -n "$PRE_SCRIPT" ]; then
-	pre_src=$(mktemp)
-	echo -e "$PRE_SCRIPT" >"$pre_src"
-	run_script "Pre script" "$pre_src"
-fi
-case "$MODE" in
-push)
-	eval "$cmd_rsync" "$SOURCE" "$USER@$HOST:$TARGET"
-	;;
-pull)
-	eval "$cmd_rsync" "$USER@$HOST:$SOURCE" "$TARGET"
-	;;
-local)
-	eval "$cmd_rsync" "$SOURCE" "$TARGET"
-	;;
-esac
-if [ -n "$POST_SCRIPT" ]; then
-	post_src=$(mktemp)
-	echo -e "$POST_SCRIPT" >"$post_src"
-	run_script "Post script" "$post_src"
-fi
+for h in $REMOTE_HOSTS; do
+	HOST="$h"
+	if [ -n "$PRE_SCRIPT" ]; then
+		pre_src=$(mktemp)
+		echo -e "$PRE_SCRIPT" >"$pre_src"
+		run_script "Pre script" "$pre_src"
+	fi
+	case "$MODE" in
+	push)
+		eval "$cmd_rsync" "$SOURCE" "$USER@$HOST:$TARGET"
+		;;
+	pull)
+		eval "$cmd_rsync" "$USER@$HOST:$SOURCE" "$TARGET"
+		;;
+	local)
+		eval "$cmd_rsync" "$SOURCE" "$TARGET"
+		;;
+	esac
+	if [ -n "$POST_SCRIPT" ]; then
+		post_src=$(mktemp)
+		echo -e "$POST_SCRIPT" >"$post_src"
+		run_script "Post script" "$post_src"
+	fi
+done

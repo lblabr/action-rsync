@@ -21,6 +21,19 @@ jobs:
           POST_SCRIPT: "ls /tmp/action-rsync_push && date -u"
       - uses: up9cloud/action-rsync@master
         name: |
+          Test multiple hosts
+        env:
+          REMOTE_HOSTS: ${{secrets.DEPLOY_HOST}},${{secrets.DEPLOY_HOST}}
+          KEY: ${{secrets.DEPLOY_SSH_KEY}}
+          TARGET: /tmp/action-rsync_push/
+          VERBOSE: true
+          PRE_SCRIPT: |
+            echo I ❤️ this action!
+            rm -fr /tmp/action-rsync_push
+            date -u
+          POST_SCRIPT: "ls /tmp/action-rsync_push && date -u"
+      - uses: up9cloud/action-rsync@master
+        name: |
           Mode: push, local (SOURCE) to remote (TARGET), ssh login by PASSWORD
         env:
           HOST: ${{secrets.DEPLOY_HOST}}

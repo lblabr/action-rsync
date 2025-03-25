@@ -72,7 +72,7 @@ docker run -it --rm \
 ||Default Value|Description|
 |---|---|---|
 |**`HOST`**||Remote server ssh hostname or ip address<br>**Required if** **`MODE`** is `push` or `pull`|
-|**`REMOTE_HOSTS`**||Multiple remote servers<br>Could be comma separate items style or one line one item style<br>It will execute pre & post scripts on every host**Required if** **`MODE`** is `push` or `pull`|
+|**`REMOTE_HOSTS`**||Multiple remote hosts<br>Could be comma separate items style, e.q. 1.2.3.4,8.8.4.4<br>or one line one item style, e.q. 8.8.8.8\n111.111.111.111<br>It will execute pre & post scripts on every host<br>**Required if** **`MODE`** is `push` or `pull`|
 |**`USER`**|`root`|Remote server ssh user<br>It's useless when **`MODE`** is `local`|
 |**`PORT`**|`22`|Remote server ssh port<br>It's useless when **`MODE`** is `local`|
 |**`KEY`**||The ssh private key<br>**Required if** **`PASSWORD`** is not provided and **`MODE`** is `push` or `pull`|

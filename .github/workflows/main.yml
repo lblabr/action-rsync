@@ -1,4 +1,12 @@
-on: [push]
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - .github/workflows/main.yml
+      - action.yml
+      - Dockerfile
+      - entrypoint.sh
 
 jobs:
   test:

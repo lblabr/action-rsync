@@ -1,44 +1,13 @@
 #!/bin/sh
 set -e
 
-__err=0
-function log() {
-	if [ "$VERBOSE" == "true" ]; then
-		printf '[action-rsync] %s\n' "$@"
-	fi
-}
-function err() {
-	__err=$((__err + 1))
-	printf '[action-rsync] %s\n' "$@" 1>&2
-}
-function die() {
-	err "$@"
-	exit 1
-}
-
-function setup_keys() {
-	local prefix="$1"
-	K_VERBOSE="\$${prefix}VERBOSE"
-	K_MODE="\$${prefix}MODE"
-	K_HOST="\$${prefix}HOST"
-	K_REMOTE_HOSTS="\$${prefix}REMOTE_HOSTS"
-	K_TARGET="\$${prefix}TARGET"
-	K_KEY="\$${prefix}KEY"
-	K_PASSWORD="\$${prefix}PASSWORD"
-	K_USER="\$${prefix}USER"
-	K_PORT="\$${prefix}PORT"
-	K_SOURCE="\$${prefix}SOURCE"
-	K_ARGS="\$${prefix}ARGS"
-	K_ARGS_MORE="\$${prefix}ARGS_MORE"
-	K_SSH_ARGS="\$${prefix}SSH_ARGS"
-	K_RUN_SCRIPT_ON="\$${prefix}RUN_SCRIPT_ON"
-	K_PRE_SCRIPT="\$${prefix}PRE_SCRIPT"
-	K_POST_SCRIPT="\$${prefix}POST_SCRIPT"
-}
-# Defaults
-setup_keys
+ACTION_ID=action-rsync
+K_PREFIX=""
 
 # Drone CI
+if [ -n "$DRONE_BRANCH" ]; then
+	K_PREFIX="PLUGIN_"
+fi
 if [ -n "$PLUGIN_VERBOSE" ]; then
 	VERBOSE="$PLUGIN_VERBOSE"
 fi
@@ -53,8 +22,6 @@ if [ -n "$PLUGIN_REMOTE_HOSTS" ]; then
 fi
 if [ -n "$PLUGIN_TARGET" ]; then
 	TARGET="$PLUGIN_TARGET"
-	# Because $TARGET must be set, so we set keys here
-	setup_keys "PLUGIN_"
 fi
 if [ -n "$PLUGIN_KEY" ]; then
 	KEY="$PLUGIN_KEY"
@@ -92,12 +59,27 @@ fi
 
 # Github action
 if [ -n "$GITHUB_WORKSPACE" ]; then
-	cd $GITHUB_WORKSPACE
+	cd "$GITHUB_WORKSPACE"
 fi
 
 if [ -z "$VERBOSE" ]; then
 	VERBOSE=false
 fi
+
+__err=0
+log() {
+	if [ "$VERBOSE" = "true" ]; then
+		printf "[$ACTION_ID] %s\n" "$*"
+	fi
+}
+err() {
+	__err=$((__err + 1))
+	printf "[$ACTION_ID] %s\n" "$*" 1>&2
+}
+die() {
+	err "$*"
+	exit 1
+}
 
 if [ -z "$MODE" ]; then
 	MODE=push
@@ -107,7 +89,7 @@ else
 	case "$MODE" in
 	push | pull | local) ;;
 	*)
-		die "Invalid $K_MODE. Must be one of [push, pull, local]"
+		die "Invalid \$${K_PREFIX}MODE. Must be one of [push, pull, local]"
 		;;
 	esac
 fi
@@ -116,29 +98,28 @@ if [ -z "$REMOTE_HOSTS" ]; then
 	if [ -z "$HOST" ]; then
 		case "$MODE" in
 		push | pull)
-			die "Must specify $K_HOST or $K_REMOTE_HOSTS! (Remote host)"
+			die "Must specify \$${K_PREFIX}HOST or \$${K_PREFIX}REMOTE_HOSTS! (Remote host)"
 			;;
 		esac
 	fi
 	REMOTE_HOSTS="$HOST"
 else
-	REMOTE_HOSTS="${REMOTE_HOSTS//[,]/ }"
-	REMOTE_HOSTS="${REMOTE_HOSTS//$'\n'/ }"
+	REMOTE_HOSTS=$(printf "%s" "$REMOTE_HOSTS" | tr ',\r\n' ' ')
 fi
 
 if [ -z "$TARGET" ]; then
-	die "Must specify $K_TARGET! (Target folder or file. If you set it as a file, must set $K_SOURCE as file too.)"
+	die "Must specify \$${K_PREFIX}TARGET! (Target folder or file. If you set it as a file, must set \$${K_PREFIX}SOURCE as file too.)"
 fi
 
 if [ -z "$KEY" ]; then
 	if [ -z "$PASSWORD" ]; then
 		case "$MODE" in
 		push | pull)
-			die "Must provide either $K_KEY or $K_PASSWORD! (ssh private key or ssh password)"
+			die "Must provide either \$${K_PREFIX}KEY or \$${K_PREFIX}PASSWORD! (ssh private key or ssh password)"
 			;;
 		esac
 	else
-		log "Using $K_PASSWORD is less secure, please consider using $K_KEY instead."
+		log "Using \$${K_PREFIX}PASSWORD is less secure, please consider using \$${K_PREFIX}KEY instead."
 	fi
 fi
 
@@ -146,7 +127,7 @@ if [ -z "$USER" ]; then
 	USER="root"
 	case "$MODE" in
 	push | pull)
-		log "$K_USER not specified, using default: '$USER'."
+		log "\$${K_PREFIX}USER not specified, using default: '$USER'."
 		;;
 	esac
 fi
@@ -155,39 +136,39 @@ if [ -z "$PORT" ]; then
 	PORT="22"
 	case "$MODE" in
 	push | pull)
-		log "$K_PORT not specified, using default: $PORT."
+		log "\$${K_PREFIX}PORT not specified, using default: $PORT."
 		;;
 	esac
 fi
 
 if [ -z "$SOURCE" ]; then
 	SOURCE="./"
-	log "$K_SOURCE not specified, using default folder: '$SOURCE'."
+	log "\$${K_PREFIX}SOURCE not specified, using default folder: '$SOURCE'."
 fi
 
 if [ -z "$ARGS" ]; then
 	ARGS="-azv --delete --exclude=/.git/ --exclude=/.github/"
-	log "$K_ARGS not specified, using default rsync arguments: '$ARGS'."
+	log "\$${K_PREFIX}ARGS not specified, using default rsync arguments: '$ARGS'."
 fi
 
-if [ ! -z "$ARGS_MORE" ]; then
-	log "$K_ARGS_MORE specified, will append to $K_ARGS."
+if [ -n "$ARGS_MORE" ]; then
+	log "\$${K_PREFIX}ARGS_MORE specified, will append to \$${K_PREFIX}ARGS."
 fi
 
 if [ -z "$SSH_ARGS" ]; then
 	SSH_ARGS="-p $PORT -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=quiet"
 	case "$MODE" in
 	push | pull)
-		log "$K_SSH_ARGS not specified, using default: '$SSH_ARGS'."
+		log "\$${K_PREFIX}SSH_ARGS not specified, using default: '$SSH_ARGS'."
 		;;
 	esac
 else
-	log "You spcified $K_SSH_ARGS, so $K_PORT will be ignored."
+	log "You specified \$${K_PREFIX}SSH_ARGS, so \$${K_PREFIX}PORT will be ignored."
 fi
 
 if [ -z "$RUN_SCRIPT_ON" ]; then
 	RUN_SCRIPT_ON=target
-	log "$K_RUN_SCRIPT_ON not specified, using default: '$RUN_SCRIPT_ON'"
+	log "\$${K_PREFIX}RUN_SCRIPT_ON not specified, using default: '$RUN_SCRIPT_ON'"
 else
 	RUN_SCRIPT_ON=$(echo "$RUN_SCRIPT_ON" | tr '[:upper:]' '[:lower:]')
 fi
@@ -198,30 +179,30 @@ local)
 	;;
 remote)
 	REAL_RUN_SCRIPT_ON="$RUN_SCRIPT_ON"
-	if [ "$MODE" == "local" ]; then
-		die "It's meaningless, you want run scripts on remote but $K_MODE is local?"
+	if [ "$MODE" = "local" ]; then
+		die "Invalid setup: cannot run scripts on remote when \$${K_PREFIX}MODE is 'local'."
 	fi
 	;;
 source)
-	if [ "$MODE" == "local" ]; then
+	if [ "$MODE" = "local" ]; then
 		REAL_RUN_SCRIPT_ON=local
-	elif [ "$MODE" == "push" ]; then
+	elif [ "$MODE" = "push" ]; then
 		REAL_RUN_SCRIPT_ON=local
 	else
 		REAL_RUN_SCRIPT_ON=remote
 	fi
 	;;
 target)
-	if [ "$MODE" == "local" ]; then
+	if [ "$MODE" = "local" ]; then
 		REAL_RUN_SCRIPT_ON=local
-	elif [ "$MODE" == "push" ]; then
+	elif [ "$MODE" = "push" ]; then
 		REAL_RUN_SCRIPT_ON=remote
 	else
 		REAL_RUN_SCRIPT_ON=local
 	fi
 	;;
 *)
-	die "Invalid $K_RUN_SCRIPT_ON, must be one of [local, remote, source, target]"
+	die "Invalid \$${K_PREFIX}RUN_SCRIPT_ON, must be one of [local, remote, source, target]"
 	;;
 esac
 
@@ -266,34 +247,29 @@ remote)
 esac
 
 run_script() {
-	local name="$1"
-	local src="$2"
+	name="$1"
+	src="$2"
 
 	log "========== $name starting =========="
-	local tmp_output=/tmp/target_mktemp_output
-	if [ "$REAL_RUN_SCRIPT_ON" == "remote" ]; then
-		eval "$cmd_ssh" "$USER@$HOST" 'mktemp' >"$tmp_output"
+	if [ "$REAL_RUN_SCRIPT_ON" = "remote" ]; then
+		dest=$(eval "$cmd_ssh" "$USER@$HOST" 'mktemp')
 	else
-		mktemp >"$tmp_output"
+		dest=$(mktemp)
 	fi
-	if [ $? -ne 0 ]; then
-		die "Run 'mktemp' command failed, make sure $REAL_RUN_SCRIPT_ON server has that command!"
-	fi
-	local dest=$(cat "$tmp_output")
 
-	if [ "$REAL_RUN_SCRIPT_ON" == "remote" ]; then
+	if [ "$REAL_RUN_SCRIPT_ON" = "remote" ]; then
 		eval "$cmd_rsync_script" "$src" "$USER@$HOST:$dest"
 	else
 		eval "$cmd_rsync_script" "$src" "$dest"
 	fi
 	log "========== $name sent =========="
-	if [ "$REAL_RUN_SCRIPT_ON" == "remote" ]; then
+	if [ "$REAL_RUN_SCRIPT_ON" = "remote" ]; then
 		eval "$cmd_ssh" "$USER@$HOST" "sh $dest"
 	else
 		sh "$dest"
 	fi
 	log "========== $name executed =========="
-	if [ "$REAL_RUN_SCRIPT_ON" == "remote" ]; then
+	if [ "$REAL_RUN_SCRIPT_ON" = "remote" ]; then
 		eval "$cmd_ssh" "$USER@$HOST" "rm $dest"
 	else
 		rm "$dest"
@@ -305,7 +281,7 @@ __run_count=0
 run_once() {
 	if [ -n "$PRE_SCRIPT" ]; then
 		pre_src=$(mktemp)
-		echo -e "$PRE_SCRIPT" >"$pre_src"
+		printf "%s\n" "$PRE_SCRIPT" >"$pre_src"
 		run_script "Pre script" "$pre_src"
 	fi
 	case "$MODE" in
@@ -321,16 +297,17 @@ run_once() {
 	esac
 	if [ -n "$POST_SCRIPT" ]; then
 		post_src=$(mktemp)
-		echo -e "$POST_SCRIPT" >"$post_src"
+		printf "%s\n" "$POST_SCRIPT" >"$post_src"
 		run_script "Post script" "$post_src"
 	fi
 	__run_count=$((__run_count + 1))
 }
 
 # Execute
-if [ "$MODE" == "local" ]; then
+if [ "$MODE" = "local" ]; then
 	run_once
 else
+	log "Starting execution with mode '$MODE' on host(s): $REMOTE_HOSTS"
 	for h in $REMOTE_HOSTS; do
 		HOST="$h"
 		run_once
@@ -338,9 +315,9 @@ else
 fi
 
 # final handler
-if [[ "$__run_count" -eq 0 ]]; then
+if [ "$__run_count" -eq 0 ]; then
 	err "No successful execution was detected"
 fi
-if [[ "$__err" -ne 0 ]]; then
+if [ "$__err" -ne 0 ]; then
 	exit 1
 fi

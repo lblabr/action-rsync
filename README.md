@@ -56,15 +56,6 @@ docker run -it --rm \
   -e KEY="$(cat ~/.ssh/id_rsa)"
   -e TARGET="/app/" \
   sstc/action-rsync
-
-# Or aliases with prefix PLUGIN_, based on drone ci envs
-docker run -it --rm \
-  -v $(pwd):/app \
-  -w /app \
-  -e PLUGIN_HOST="target.example.com" \
-  -e PLUGIN_KEY="$(cat ~/.ssh/id_rsa)"
-  -e PLUGIN_TARGET="/app/" \
-  sstc/action-rsync
 ```
 
 ## ENVs

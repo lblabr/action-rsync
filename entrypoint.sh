@@ -72,6 +72,9 @@ log() {
 		printf "[$ACTION_ID] %s\n" "$*"
 	fi
 }
+warn() {
+	printf "[$ACTION_ID] %s\n" "$*" 1>&2
+}
 err() {
 	__err=$((__err + 1))
 	printf "[$ACTION_ID] %s\n" "$*" 1>&2
@@ -119,7 +122,7 @@ if [ -z "$KEY" ]; then
 			;;
 		esac
 	else
-		log "Using \$${K_PREFIX}PASSWORD is less secure, please consider using \$${K_PREFIX}KEY instead."
+		warn "Using \$${K_PREFIX}PASSWORD is less secure, please consider using \$${K_PREFIX}KEY instead."
 	fi
 fi
 

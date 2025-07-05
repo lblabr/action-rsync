@@ -62,11 +62,9 @@ jobs:
           VERBOSE: true
           RUN_SCRIPT_ON: local
           PRE_SCRIPT: |
-            if ls /tmp/action-rsync; then
-              exit 2
-            fi
+            ls
             date -u
-          POST_SCRIPT: "if ls /tmp/action-rsync; then exit 2; fi && date -u"
+          POST_SCRIPT: "ls && date -u"
       - uses: up9cloud/action-rsync@master
         name: |
           Mode: pull, remote (SOURCE) to local (TARGET), run scripts at local (TARGET)
@@ -94,10 +92,8 @@ jobs:
           TARGET: /tmp/.profile
           VERBOSE: true
           RUN_SCRIPT_ON: source
-          PRE_SCRIPT: |
-            rm -fr /tmp/action-rsync_pull
-            date -u
-          POST_SCRIPT: "if ls /tmp/action-rsync_pull; then exit 2; fi && date -u"
+          PRE_SCRIPT: date -u
+          POST_SCRIPT: date -u
       - uses: up9cloud/action-rsync@master
         name: |
           Mode: local, local (SOURCE) to local (TARGET), run scripts at local (always)

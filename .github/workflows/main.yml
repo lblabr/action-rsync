@@ -10,7 +10,7 @@ on:
       - entrypoint.sh
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: checkout some files

@@ -14,7 +14,7 @@ jobs:
     name: Testing and build
     steps:
       - uses: actions/checkout@v4
-      - uses: lblabr/action-rsync@master
+      - uses: up9cloud/action-rsync@master
         name: |
           Mode: push, local (SOURCE) to remote (TARGET), run scripts on remote (TARGET)
         env:
@@ -27,7 +27,7 @@ jobs:
             rm -fr tmp/action-rsync_push
             date -u
           POST_SCRIPT: "ls tmp/action-rsync_push && date -u"
-      - uses: lblabr/action-rsync@master
+      - uses: up9cloud/action-rsync@master
         name: |
           Test multiple hosts
         env:
@@ -40,7 +40,7 @@ jobs:
             rm -fr tmp/action-rsync_push
             date -u
           POST_SCRIPT: "ls tmp/action-rsync_push && date -u"
-      - uses: lblabr/action-rsync@master
+      - uses: up9cloud/action-rsync@master
         name: |
           Mode: push, local (SOURCE) to remote (TARGET), ssh login by PASSWORD
         env:
@@ -52,7 +52,7 @@ jobs:
           PRE_SCRIPT: |
             date -u
           POST_SCRIPT: "pwd && date -u"
-      - uses: lblabr/action-rsync@master
+      - uses: up9cloud/action-rsync@master
         name: |
           Mode: push, local (SOURCE) to remote (TARGET), run scripts at local (SOURCE)
         env:
@@ -65,7 +65,7 @@ jobs:
             ls
             date -u
           POST_SCRIPT: "ls && date -u"
-      - uses: lblabr/action-rsync@master
+      - uses: up9cloud/action-rsync@master
         name: |
           Mode: pull, remote (SOURCE) to local (TARGET), run scripts at local (TARGET)
         env:
@@ -81,7 +81,7 @@ jobs:
             fi
             date -u
           POST_SCRIPT: "cat /tmp/.profile && date -u"
-      - uses: lblabr/action-rsync@master
+      - uses: up9cloud/action-rsync@master
         name: |
           Mode: pull, remote (SOURCE) to local (TARGET), run scripts on remote (SOURCE)
         env:
@@ -94,7 +94,7 @@ jobs:
           RUN_SCRIPT_ON: source
           PRE_SCRIPT: date -u
           POST_SCRIPT: date -u
-      - uses: lblabr/action-rsync@master
+      - uses: up9cloud/action-rsync@master
         name: |
           Mode: local, local (SOURCE) to local (TARGET), run scripts at local (always)
         env:
@@ -121,7 +121,7 @@ jobs:
           push: true
           tags: sstc/action-rsync:latest
       - name: Notify telegram
-        uses: lblabr/action-notify@master
+        uses: up9cloud/action-notify@master
         if: cancelled() == false
         env:
           GITHUB_JOB_STATUS: ${{ job.status }}

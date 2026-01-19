@@ -19,7 +19,7 @@ jobs:
           Mode: push, local (SOURCE) to remote (TARGET), run scripts on remote (TARGET)
         env:
           HOST: ${{secrets.DEPLOY_HOST}}
-          KEY: ${{secrets.DEPLOY_SSH_KEY}}
+          PASSWORD: ${{secrets.DEPLOY_SSH_PASSWORD}}
           TARGET: tmp/action-rsync_push/
           VERBOSE: true
           PRE_SCRIPT: |

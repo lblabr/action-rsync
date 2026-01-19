@@ -14,149 +14,34 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - name: checkout some files
-        uses: actions/checkout@v4
+    - name: checkout some files
+      uses: actions/checkout@v4
 
-      - name: Deploy - Create directory
-        uses: ysurac/ssh-action@master
-        env:
-          SOURCE_NAME: "openwrt"
-          SOURCE_BRANCH: "openwrt"
-          SOURCE_TAG: "tag"
-        with:
-          command: |
-            mkdir -p deploy/${{env.SOURCE_BRANCH}}/${{matrix.OMR_KERNEL}}/${{matrix.OMR_TARGET}}
-          host: ${{ secrets.DEPLOY_HOST }}
-          user: ${{ secrets.DEPLOY_SSH_USER }}
-          port: ${{ secrets.OMR_DEPLOY_PORT }}
-          pass: ${{ secrets.DEPLOY_SSH_PASSWORD }}
-          args: -tt
-        
-      - name: Copy files via SSH
-        uses: appleboy/scp-action@v1
-        env:
-          SOURCE_NAME: "openwrt"
-          SOURCE_BRANCH: "openwrt"
-          SOURCE_TAG: "tag"
-        with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_SSH_USER }}
-          password: ${{ secrets.DEPLOY_SSH_PASSWORD }}
-          port: ${{ secrets.PORT }}
-          source: "./"
-          TARGET: deploy/${{env.SOURCE_BRANCH}}/${{matrix.OMR_KERNEL}}/${{matrix.OMR_TARGET}}
-
-      - uses: up9cloud/action-rsync@master
-        name: |
-          Mode: push, local (SOURCE) to remote (TARGET), run scripts on remote (TARGET)
-        env:
-          HOST: ${{secrets.DEPLOY_HOST}}
-          USER: ${{secrets.DEPLOY_SSH_USER}}
-          PASSWORD: ${{secrets.DEPLOY_SSH_PASSWORD}}
-          TARGET: tmp/action-rsync_push/
-          VERBOSE: true
-          PRE_SCRIPT: |
-            echo I ❤️ this action!
-            rm -fr tmp/action-rsync_push
-            date -u
-          POST_SCRIPT: "ls tmp/action-rsync_push && date -u"
-      - uses: up9cloud/action-rsync@master
-        name: |
-          Test multiple hosts
-        env:
-          REMOTE_HOSTS: ${{secrets.DEPLOY_HOST}},${{secrets.DEPLOY_HOST}}
-          KEY: ${{secrets.DEPLOY_SSH_KEY}}
-          TARGET: tmp/action-rsync_push/
-          VERBOSE: true
-          PRE_SCRIPT: |
-            echo I ❤️ this action!
-            rm -fr tmp/action-rsync_push
-            date -u
-          POST_SCRIPT: "ls tmp/action-rsync_push && date -u"
-      - uses: up9cloud/action-rsync@master
-        name: |
-          Mode: push, local (SOURCE) to remote (TARGET), ssh login by PASSWORD
-        env:
-          HOST: ${{secrets.DEPLOY_HOST}}
-          USER: ${{secrets.DEPLOY_SSH_USER}}
-          PASSWORD: ${{secrets.DEPLOY_SSH_PASSWORD}}
-          TARGET: tmp/action-rsync_push_via_ssh_password/
-          VERBOSE: true
-          PRE_SCRIPT: |
-            date -u
-          POST_SCRIPT: "pwd && date -u"
-      - uses: up9cloud/action-rsync@master
-        name: |
-          Mode: push, local (SOURCE) to remote (TARGET), run scripts at local (SOURCE)
-        env:
-          HOST: ${{secrets.DEPLOY_HOST}}
-          KEY: ${{secrets.DEPLOY_SSH_KEY}}
-          TARGET: tmp/action-rsync/
-          VERBOSE: true
-          RUN_SCRIPT_ON: local
-          PRE_SCRIPT: |
-            ls
-            date -u
-          POST_SCRIPT: "ls && date -u"
-      - uses: up9cloud/action-rsync@master
-        name: |
-          Mode: pull, remote (SOURCE) to local (TARGET), run scripts at local (TARGET)
-        env:
-          MODE: pull
-          HOST: ${{secrets.DEPLOY_HOST}}
-          KEY: ${{secrets.DEPLOY_SSH_KEY}}
-          SOURCE: /root/.profile
-          TARGET: /tmp/.profile
-          VERBOSE: true
-          PRE_SCRIPT: |
-            if ls /tmp/.profile; then
-              exit 2
-            fi
-            date -u
-          POST_SCRIPT: "cat /tmp/.profile && date -u"
-      - uses: up9cloud/action-rsync@master
-        name: |
-          Mode: pull, remote (SOURCE) to local (TARGET), run scripts on remote (SOURCE)
-        env:
-          MODE: pull
-          HOST: ${{secrets.DEPLOY_HOST}}
-          KEY: ${{secrets.DEPLOY_SSH_KEY}}
-          SOURCE: /root/.profile
-          TARGET: /tmp/.profile
-          VERBOSE: true
-          RUN_SCRIPT_ON: source
-          PRE_SCRIPT: date -u
-          POST_SCRIPT: date -u
-      - uses: up9cloud/action-rsync@master
-        name: |
-          Mode: local, local (SOURCE) to local (TARGET), run scripts at local (always)
-        env:
-          MODE: local
-          TARGET: /tmp/action-rsync_local/
-          VERBOSE: true
-          PRE_SCRIPT: |
-            if ls /tmp/action-rsync_local; then
-              exit 2
-            fi
-            date -u
-          POST_SCRIPT: "ls /tmp/action-rsync_local && date -u"
-      - uses: docker/setup-buildx-action@v3
-        if: ${{ github.event_name == 'push' && success() }}
-      - uses: docker/login-action@v3
-        if: ${{ github.event_name == 'push' && success() }}
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-      - name: Push to Docker Hub
-        uses: docker/build-push-action@v5
-        if: ${{ github.event_name == 'push' && success() }}
-        with:
-          push: true
-          tags: sstc/action-rsync:latest
-      - name: Notify telegram
-        uses: up9cloud/action-notify@master
-        if: cancelled() == false
-        env:
-          GITHUB_JOB_STATUS: ${{ job.status }}
-          TELEGRAM_BOT_TOKEN: ${{secrets.TELEGRAM_BOT_TOKEN}}
-          TELEGRAM_CHAT_ID: ${{secrets.TELEGRAM_CHAT_ID}}
+    - name: Deploy - Create directory
+      uses: ysurac/ssh-action@master
+      env:
+        SOURCE_NAME: "openwrt"
+        SOURCE_BRANCH: "openwrt"
+        SOURCE_TAG: "tag"
+      with:
+        command: |
+          mkdir -p deploy/${{env.SOURCE_BRANCH}}/${{matrix.OMR_KERNEL}}/${{matrix.OMR_TARGET}}
+        host: ${{ secrets.DEPLOY_HOST }}
+        user: ${{ secrets.DEPLOY_SSH_USER }}
+        port: ${{ secrets.OMR_DEPLOY_PORT }}
+        pass: ${{ secrets.DEPLOY_SSH_PASSWORD }}
+        args: -tt
+      
+    - name: Copy files via SSH
+      uses: appleboy/scp-action@v1
+      env:
+        SOURCE_NAME: "openwrt"
+        SOURCE_BRANCH: "openwrt"
+        SOURCE_TAG: "tag"
+      with:
+        host: ${{ secrets.DEPLOY_HOST }}
+        username: ${{ secrets.DEPLOY_SSH_USER }}
+        password: ${{ secrets.DEPLOY_SSH_PASSWORD }}
+        port: ${{ secrets.PORT }}
+        source: "./"
+        TARGET: deploy/${{env.SOURCE_BRANCH}}/${{matrix.OMR_KERNEL}}/${{matrix.OMR_TARGET}}

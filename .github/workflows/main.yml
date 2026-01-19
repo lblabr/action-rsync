@@ -23,9 +23,11 @@ jobs:
         SOURCE_NAME: "openwrt"
         SOURCE_BRANCH: "openwrt"
         SOURCE_TAG: "tag"
+        OMR_TARGET: "target"
+        OMR_KERNEL: "6.12"
       with:
         command: |
-          mkdir -p deploy/${{env.SOURCE_BRANCH}}/${{matrix.OMR_KERNEL}}/${{matrix.OMR_TARGET}}
+          mkdir -p deploy/${{env.SOURCE_BRANCH}}/${{env.OMR_KERNEL}}/${{env.OMR_TARGET}}
         host: ${{ secrets.DEPLOY_HOST }}
         user: ${{ secrets.DEPLOY_SSH_USER }}
         port: ${{ secrets.OMR_DEPLOY_PORT }}
@@ -38,10 +40,12 @@ jobs:
         SOURCE_NAME: "openwrt"
         SOURCE_BRANCH: "openwrt"
         SOURCE_TAG: "tag"
+        OMR_TARGET: "target"
+        OMR_KERNEL: "6.12"
       with:
         host: ${{ secrets.DEPLOY_HOST }}
         username: ${{ secrets.DEPLOY_SSH_USER }}
         password: ${{ secrets.DEPLOY_SSH_PASSWORD }}
         port: ${{ secrets.PORT }}
         source: "./"
-        TARGET: deploy/${{env.SOURCE_BRANCH}}/${{matrix.OMR_KERNEL}}/${{matrix.OMR_TARGET}}
+        TARGET: deploy/${{env.SOURCE_BRANCH}}/${{env.OMR_KERNEL}}/${{env.OMR_TARGET}}

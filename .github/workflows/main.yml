@@ -20,26 +20,26 @@ jobs:
         env:
           HOST: ${{secrets.DEPLOY_HOST}}
           KEY: ${{secrets.DEPLOY_SSH_KEY}}
-          TARGET: /tmp/action-rsync_push/
+          TARGET: tmp/action-rsync_push/
           VERBOSE: true
           PRE_SCRIPT: |
             echo I ❤️ this action!
-            rm -fr /tmp/action-rsync_push
+            rm -fr tmp/action-rsync_push
             date -u
-          POST_SCRIPT: "ls /tmp/action-rsync_push && date -u"
+          POST_SCRIPT: "ls tmp/action-rsync_push && date -u"
       - uses: lblabr/action-rsync@master
         name: |
           Test multiple hosts
         env:
           REMOTE_HOSTS: ${{secrets.DEPLOY_HOST}},${{secrets.DEPLOY_HOST}}
           KEY: ${{secrets.DEPLOY_SSH_KEY}}
-          TARGET: /tmp/action-rsync_push/
+          TARGET: tmp/action-rsync_push/
           VERBOSE: true
           PRE_SCRIPT: |
             echo I ❤️ this action!
-            rm -fr /tmp/action-rsync_push
+            rm -fr tmp/action-rsync_push
             date -u
-          POST_SCRIPT: "ls /tmp/action-rsync_push && date -u"
+          POST_SCRIPT: "ls tmp/action-rsync_push && date -u"
       - uses: lblabr/action-rsync@master
         name: |
           Mode: push, local (SOURCE) to remote (TARGET), ssh login by PASSWORD
@@ -47,7 +47,7 @@ jobs:
           HOST: ${{secrets.DEPLOY_HOST}}
           USER: ${{secrets.DEPLOY_SSH_USER}}
           PASSWORD: ${{secrets.DEPLOY_SSH_PASSWORD}}
-          TARGET: /tmp/action-rsync_push_via_ssh_password/
+          TARGET: tmp/action-rsync_push_via_ssh_password/
           VERBOSE: true
           PRE_SCRIPT: |
             date -u
@@ -58,7 +58,7 @@ jobs:
         env:
           HOST: ${{secrets.DEPLOY_HOST}}
           KEY: ${{secrets.DEPLOY_SSH_KEY}}
-          TARGET: /tmp/action-rsync/
+          TARGET: tmp/action-rsync/
           VERBOSE: true
           RUN_SCRIPT_ON: local
           PRE_SCRIPT: |
